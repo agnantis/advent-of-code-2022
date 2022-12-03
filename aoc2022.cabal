@@ -27,6 +27,7 @@ library
   exposed-modules:
       AoC.Day1
       AoC.Day2
+      AoC.Day3
       AoC.Utils
       Lib
   other-modules:
@@ -36,6 +37,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 executable aoc2022-exe
@@ -48,6 +50,7 @@ executable aoc2022-exe
   build-depends:
       aoc2022
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 test-suite aoc2022-test
@@ -61,4 +64,5 @@ test-suite aoc2022-test
   build-depends:
       aoc2022
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
