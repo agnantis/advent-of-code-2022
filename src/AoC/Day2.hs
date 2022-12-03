@@ -37,6 +37,21 @@ result S P = Loss
 result S R = Win
 result _ _ = Draw
 
+decode :: PRS -> Result
+decode R = Loss -- X
+decode P = Draw -- Y
+decode S = Win  -- Z
+
+selectShape :: PRS -> Result -> PRS
+selectShape R  Win  = P
+selectShape R  Loss = S
+selectShape P  Loss = R
+selectShape P  Win  = S
+selectShape S  Loss = P
+selectShape S  Win  = R
+selectShape x  Draw = x
+
+
 type Input = [(PRS, PRS)]
 type Output = Int
 
@@ -50,7 +65,7 @@ fstStar :: Input -> Output
 fstStar = sum . fmap (\(a,b) -> resultValue (result a b) + shapeValue b)
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar = fstStar . fmap (\(a, b) -> (a, selectShape a (decode b)))
 
 ---
 
