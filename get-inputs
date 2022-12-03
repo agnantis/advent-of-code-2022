@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+. ./session
+maxDay=$1
+year=$2
+currentYear=$(date +%Y)
+currentMonth=$(date +%-m)
+currentDay=$(date +%-d)
+inputDir=src/input
+if [[ -z $year ]]; then
+  year=$currentYear
+fi
+if [[ -z $maxDay ]]; then
+  maxDay=$currentDay
+fi
+mkdir -p $inputDir
+
+if (( currentYear >= year )) && (( currentMonth == 12 )); then
+  for i in {1..25}; do
+    if (( currentDay >= i && i <= maxDay )); then
+      filename=$inputDir/day${i}
+      if [[ ! -s $filename ]]; then
+        echo "Downloading $filename ..."
+        curl -s -b session=$SESSION_ID https://adventofcode.com/${currentYear}/day/${i}/input > $filename
+      fi
+    fi
+  done
+else
+  echo "Advent of code is not here yet! You need to wait till 01 December $year"
+fi
