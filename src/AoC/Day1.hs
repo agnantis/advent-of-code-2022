@@ -1,5 +1,8 @@
 module AoC.Day1 (mainDay) where
 
+import Control.Arrow ((&&&))
+import Data.List (sort)
+import Data.Ord (Down (..), getDown)
 import AoC.Utils (splitWhen)
 
 type Input = [[Int]]
@@ -9,7 +12,7 @@ fstStar :: Input -> Output
 fstStar = maximum . fmap sum
 
 sndStar :: Input -> Output
-sndStar xs = undefined
+sndStar = getDown . sum . take 3 . sort . fmap (Down . sum)
 
 mainDay :: IO  ()
 mainDay = do
