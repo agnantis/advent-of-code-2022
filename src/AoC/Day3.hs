@@ -15,7 +15,7 @@ fstStar :: Input -> Output
 fstStar = sum . fmap (charValue . duplicate . createMap)
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar = sum. fmap (charValue . findCommon) . groupsOf3
 
 
 createMap :: String -> (Int, Map Char [Int])
@@ -35,9 +35,19 @@ charValue c =
   let padding = if isLower c then 96 else 38
   in ord c - padding
 
+findCommon :: (String, String, String) -> Char
+findCommon (a, b, c) =
+  let Just r = find (\ch -> ch `elem` b && ch `elem` c) a
+  in r
+
+groupsOf3 :: [a] -> [(a, a, a)]
+groupsOf3 (a:b:c:xs) = (a,b,c):(groupsOf3 xs)
+groupsOf3 _          = []
 ---
 
 mainDay3 :: IO ()
 mainDay3 = do
   input <- lines <$> readFile "src/input/day3"
   print . (fstStar &&& sndStar) $ input
+
+
