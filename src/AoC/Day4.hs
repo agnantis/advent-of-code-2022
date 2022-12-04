@@ -14,7 +14,7 @@ fstStar :: Input -> Output
 fstStar = length . filter includes
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar = length . filter overlaps
 
 -- xx-xx,xx-xx
 parse :: String -> (Section, Section)
@@ -27,6 +27,12 @@ includes ((fs, fe), (ss, se))
   | fs <= ss && fe >= se = True
   | ss <= fs && se >= fe = True
   | otherwise            = False
+
+overlaps :: (Section, Section) -> Bool
+overlaps p@((fs, fe), (ss, se))
+  | fs >= ss && fs <= se  = True
+  | fe >= ss && fe <= se  = True
+  | otherwise             = includes p
 ---
 
 mainDay4 :: IO ()
