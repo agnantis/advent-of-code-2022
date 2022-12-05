@@ -12,6 +12,7 @@ type State = IntMap [Char]
 type Move = (Int, Int, Int)
 type Input = (State, [Move])
 type Output = [Char]
+data Crane = Crane9000 | Crane9001 deriving (Show, Eq)
 
 ---
 testState :: State
@@ -21,16 +22,20 @@ testMoves :: [Move]
 testMoves = [(1,2,1), (3,1,3), (2,2,1), (1,1,2)]
 
 fstStar :: Input -> Output
-fstStar (st, moves) = fmap head . M.elems . foldl' (move) st $ moves
+fstStar = solution Crane9000
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar = solution Crane9001
 
-move :: State -> Move -> State
-move st (n, f, t) =
+solution :: Crane -> Input -> Output
+solution crn (st, moves) = fmap head . M.elems . foldl' (move crn) st $ moves
+
+move :: Crane -> State -> Move -> State
+move crane st (n, f, t) =
   let fPile = fromMaybe [] $ M.lookup f st
       (s1, sw) = splitAt n fPile
-      st' = M.insertWith (<>) t (reverse s1) st
+      transf = if crane == Crane9000 then reverse else id
+      st' = M.insertWith (<>) t (transf s1) st
   in M.insert f sw st'
 
 lns = [ "        [J]         [B]     [T]    "
