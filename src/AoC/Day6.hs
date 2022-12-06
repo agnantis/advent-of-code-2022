@@ -22,7 +22,7 @@ fstStar :: Input -> Output
 fstStar = searchForUnique 4 4
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar = searchForUnique 14 14
 
 ---
 
