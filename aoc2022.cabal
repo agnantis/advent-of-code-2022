@@ -31,6 +31,7 @@ library
       AoC.Day4
       AoC.Day5
       AoC.Day6
+      AoC.Day7
       AoC.Utils
       Lib
   other-modules:
