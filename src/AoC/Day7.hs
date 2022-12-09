@@ -1,13 +1,16 @@
+{-# LANGUAGE NumericUnderscores #-}
 module AoC.Day7 where
 
 import Control.Arrow ((&&&))
 import AoC.Utils (splitOn)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
+import Data.List (sort)
 import Data.Maybe
+import Debug.Trace
 
 type Input = [CMD]
-type Output = Int
+data Output = Fst Int | Snd Int deriving Show
 
 ---
 type Size = Int
@@ -23,29 +26,37 @@ data File = File {
 } deriving (Show, Eq)
 
 data Directory = Directory {
-  parentDir :: Maybe Directory,
   files :: Map String File,
   dirs :: Map String Directory
 } deriving (Show, Eq)
+
+filesystemSize, minUnusedSpace, maxUsedSpace :: Int
+filesystemSize = 70_000_000
+minUnusedSpace = 30_000_000
+maxUsedSpace = filesystemSize - minUnusedSpace
 
 ppPrintDir :: Name -> Int -> Directory -> [String]
 ppPrintDir n ind d =
   let fls = map (\(k, v) -> replicate (ind+2) ' ' <> "- "<> k <> " (" <> show (getSize v) <> ")") . M.toList $ files d
       drs = concatMap (\(k, v) -> ppPrintDir k (ind+2) v) . M.toList $ dirs d
-      this = replicate ind ' ' <> "- " <> n
+      this = replicate ind ' ' <> "- " <> n <> "(" <> show (dirSize d) <> ")"
   in this:(fls <> drs)
 
 emptyDir :: Directory
-emptyDir = Directory Nothing M.empty M.empty
-
-emptyDirWithParent :: Directory -> Directory
-emptyDirWithParent dr = Directory (Just dr) M.empty M.empty
+emptyDir = Directory M.empty M.empty
 
 fstStar :: Input -> Output
-fstStar = sum . filter (<= 100000) . traverse' . peelOffToRoot . snd . createTree [] emptyDir
+fstStar = Fst . sum . filter (<= 100000) . snd . traverse' . peelOffToRoot . snd . createTree [] emptyDir
+-- fstStar = unlines . ppPrintDir. peelOffToRoot . snd . createTree [] emptyDir
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar input =
+  let (rt: rest) = (snd . traverse' . peelOffToRoot . snd . createTree [] emptyDir $ input) :: [Int]
+      candidates = sort . filter (\x -> rt - x <= maxUsedSpace) $ rest
+  in Snd $ head candidates
+  -- in Snd . unlines . ppPrintDir "<root>" 0 . peelOffToRoot . snd . createTree [] emptyDir $ input
+  -- in Snd . peelOffToRoot . snd . createTree [] emptyDir $ input
+  -- in Snd (rt:rest)
 
 readLine :: String -> CMD
 readLine ('$':' ':'c':'d':' ':xs) = CMD_CD xs
@@ -62,11 +73,11 @@ createTree :: [Directory] -> Directory -> [CMD] -> ([CMD], Directory)
 createTree prs dr [] = ([], dr)
 createTree prs dr (CMD_LS:xs) = createTree prs dr xs -- no op
 createTree prs dr (CMD_File n s:xs) = createTree prs (addFile dr n s) xs
-createTree prs dr (CMD_Dir n:xs) = createTree prs (addDir dr n (emptyDirWithParent dr)) xs
+createTree prs dr (CMD_Dir n:xs) = createTree prs (addDir dr n emptyDir) xs
 createTree prs dr (CMD_CD ".":xs) = createTree prs dr xs
 createTree (r:rs) dr (CMD_CD "..":xs) = (xs, dr) -- createTree rs r xs
 createTree prs dr (CMD_CD n:xs) =
-    let childDir = M.findWithDefault (emptyDirWithParent dr) n $ dirs dr
+    let childDir = M.findWithDefault emptyDir n $ dirs dr
         (cmds, childDir') = createTree (dr:prs) childDir xs
     in createTree prs (addDir dr n childDir') cmds
 
@@ -88,29 +99,76 @@ dirSize dr =
       dSize = sum . map dirSize . M.elems . dirs $ dr
   in fSize + dSize
 
-traverse' :: Directory -> [Int]
+-- TODO: Should return its size and their children in a separate list
+traverse' :: Directory -> (Int, [Int])
 traverse' dr =
-  let children = concatMap traverse' . M.elems . dirs $ dr
+  let childDirs = fmap traverse' . M.elems . dirs $ dr
+      dSizes = sum . fmap fst $ childDirs
+      children = concatMap snd childDirs
+      fSizes = sum . map getSize . M.elems . files $ dr
+      totalSize = fSizes + dSizes
+  in ((totalSize), totalSize:children)
+
+traverse1 :: Name -> Directory -> [(String, Int)]
+traverse1 nm dr =
+  let children = concatMap (\(n,s) -> traverse1 n s) . M.toList . dirs $ dr
       fsizes = sum . map getSize . M.elems . files $ dr
-      childrenSize = sum children
-  in (fsizes + childrenSize):children
+      childrenSize = sum . fmap snd $ children
+  -- in trace ("d: " <> show childrenSize <> " f: " <> show fsizes) $ (fsizes + childrenSize):children
+  in ((nm, fsizes + childrenSize)):children
 
 ---
+
+mainDay7' :: IO Output
+mainDay7' = do
+  input <- fmap readLine . lines <$> readFile "src/input/day7"
+  return $ sndStar input
 
 mainDay7 :: IO ()
 mainDay7 = do
   input <- fmap readLine . lines <$> readFile "src/input/day7"
   print . (fstStar &&& sndStar) $ input
 
-cmd = [ "$ cd /"
-      , "$ ls"
-      , "dir gts"
-      , "68377 jvdqjhr.jvp"
-      , "dir lwhbw"
-      , "228884 nqth.gcn"
-      , "$ cd gts"
-      , "$ ls"
-      , "846 grwwbrgz.wft"
-      , "$ cd .."
-      , "$ cd lwhbw"
-      , "$ ls"]
+testDir :: Directory
+testDir = peelOffToRoot . snd . createTree [] emptyDir $ fmap readLine cmd
+
+cmd = [
+      "$ cd /"
+    , "$ ls"
+    -- , "dir gts"
+    -- , "68377 jvdqjhr.jvp"
+    -- , "dir lwhbw"
+    -- , "228884 nqth.gcn"
+    , "dir pcqjnl"
+    -- , "94844 ppwv.zsh"
+    -- , "97889 rqpw"
+    -- , "dir sqhw"
+    -- , "dir vllgn"
+    -- , "dir wdtm"
+    -- , "dir ztfdwp"
+    -- , "$ cd gts"
+    -- , "$ ls"
+    -- , "846 grwwbrgz.wft"
+    -- , "72000 mrnhn.psz"
+    -- , "155241 qvnbd.dqs"
+    -- , "6655 tndtmwfv"
+    -- , "$ cd .."
+    -- , "$ cd lwhbw"
+    -- , "$ ls"
+    -- , "99946 lrrl.lth"
+    -- , "$ cd .."
+    , "$ cd pcqjnl"
+    , "$ ls"
+    -- , "76420 gdg.lvr"
+    , "dir gljcvm"
+    -- , "161390 hlnrq.mjj"
+    -- , "dir lqwntmdg"
+    -- , "dir lrrl"
+    -- , "dir qgpr"
+    -- , "222006 tndtmwfv"
+    , "$ cd gljcvm"
+    , "$ ls"
+    , "264381 tmwzlzn"
+    -- , "$ cd .."
+    -- , "$ cd lqwntmdg"
+    ]
