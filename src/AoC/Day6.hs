@@ -75,7 +75,6 @@ nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg: first marker after character 10
 zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw: first marker after character 11
 How many characters need to be processed before the first start-of-packet marker is detected?
 
-Your puzzle answer was 1920.
 
 --- Part Two ---
 Your device's communication system is correctly detecting packets, but still isn't working. It looks like it also

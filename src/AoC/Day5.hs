@@ -126,7 +126,6 @@ stack 1, M in stack 2, and Z in stack 3, so you should combine these together an
 
 After the rearrangement procedure completes, what crate ends up on top of each stack?
 
-Your puzzle answer was TWSGQHNHL.
 
 --- Part Two ---
 As you watch the crane operator expertly rearrange the crates, you notice the process isn't following your prediction.

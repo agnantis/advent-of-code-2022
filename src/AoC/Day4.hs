@@ -92,7 +92,6 @@ in need of reconsideration. In this example, there are 2 such pairs.
 
 In how many assignment pairs does one range fully contain the other?
 
-Your puzzle answer was 595.
 
 --- Part Two ---
 It seems like there is still quite a bit of duplicate work planned. Instead, the Elves would like to know the number
