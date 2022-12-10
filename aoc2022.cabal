@@ -33,6 +33,7 @@ library
       AoC.Day6
       AoC.Day7
       AoC.Day8
+      AoC.Day9
       AoC.Utils
       Lib
   other-modules:
