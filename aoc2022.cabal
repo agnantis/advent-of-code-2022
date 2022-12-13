@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       AoC.Day1
+      AoC.Day10
       AoC.Day2
       AoC.Day3
       AoC.Day4
