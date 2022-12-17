@@ -14,6 +14,7 @@ import qualified Data.IntMap as M
 import Data.Maybe
 import Data.List (sort, product)
 import Data.Ord (Down (..))
+import Debug.Trace
 
 type Monkeys = IntMap Entry
 type Monkey = Int
@@ -58,7 +59,7 @@ addItemToEntry ms indx item =
         entry <- M.lookup indx ms
         let updatedEntry = addItems entry [item]
         pure $ M.insert indx updatedEntry ms
-  in fromMaybe ms mentry
+  in if item < 0 then error "Overflow..." else fromMaybe ms mentry
    
 
 increaseInspectionsBy :: Entry -> Int -> Entry
@@ -67,10 +68,10 @@ increaseInspectionsBy entry no = entry { getNoOfInspections = getNoOfInspections
 monkeyMap :: Input -> Monkeys
 monkeyMap = M.fromList . fmap (\e -> (getMonkey e, e))
 
-runSingle :: Monkeys -> Pos -> Monkeys
-runSingle mnks pos =
+runSingle :: Maybe Int -> Monkeys -> Pos -> Monkeys
+runSingle mI mnks pos =
   let entry = mnks M.! pos
-      output = runEntry entry :: [(Monkey,WorryLvl)]
+      output = maybe (runEntry1 entry) (runEntry2 entry) mI
       mnks' = updateMonkeys mnks output
       (itemNo, entry') = emptyFromItems entry
       entry'' =  increaseInspectionsBy entry' itemNo
@@ -83,15 +84,15 @@ updateMonkeys mks ((mNo, itm):xs) =
   let mks' = addItemToEntry mks mNo itm
   in updateMonkeys mks' xs
 
-runOneRound :: Monkeys -> Monkeys
-runOneRound mnks = go (M.keys mnks) mnks
+runOneRound :: Maybe Int -> Monkeys -> Monkeys
+runOneRound mI mnks = go (M.keys mnks) mnks
  where
   go [] curMnk = curMnk
-  go (x:xs) curMnk = go xs (runSingle curMnk x)
+  go (x:xs) curMnk = go xs (runSingle mI curMnk x)
 
-runXRounds :: Int -> Monkeys -> Monkeys
-runXRounds 0 mnks = mnks
-runXRounds x mnks = runXRounds (x-1) (runOneRound mnks)
+runXRounds :: Maybe Int -> Int -> Monkeys -> Monkeys
+runXRounds _  0 mnks = mnks
+runXRounds mI x mnks = runXRounds mI (x-1) (runOneRound mI mnks)
 
 getTotalScore :: Int -> Monkeys -> Int
 getTotalScore n = product
@@ -176,22 +177,37 @@ inputP = do
 ---
 
 fstStar :: Input -> Output
-fstStar = getTotalScore 2 . runXRounds 20 . monkeyMap
+fstStar = getTotalScore 2 . runXRounds Nothing 20 . monkeyMap
 
 sndStar :: Input -> Output
-sndStar = undefined
-
+sndStar entries =
+  let mdl = product $ fmap getTestDivBy entries
+  in getTotalScore 2 . runXRounds (Just mdl) 10000 . monkeyMap $ entries
+-- 6 rounds: 3025
 ---
 
+withTrace :: Show a => a -> a
+withTrace x = traceShow x x
 
 ---
-runEntry :: Entry -> [(Monkey, WorryLvl)]
-runEntry Entry{..} = fmap mapper getStartingItems
+runEntry1 :: Entry -> [(Monkey, WorryLvl)]
+runEntry1 Entry{..} = fmap mapper getStartingItems
  where
   mapper x =
     let worryLvl = (execute getOperation x) `div` 3
-        monkey = if (worryLvl `mod` getTestDivBy) == 0 then getOnTrue else getOnFalse
+        monkey = if (worryLvl `mod` getTestDivBy) == 0
+                  then getOnTrue
+                  else getOnFalse
     in (monkey, worryLvl)
+
+runEntry2 :: Entry -> Int -> [(Monkey, WorryLvl)]
+runEntry2 Entry{..} md = fmap mapper getStartingItems
+ where
+  mapper x =
+    let worryLvl = execute getOperation x
+    in if (worryLvl `mod` getTestDivBy) == 0
+        then (getOnTrue, worryLvl `mod` md)
+        else (getOnFalse, worryLvl `mod` md)
 
 mainDay11 :: IO ()
 mainDay11 = do
