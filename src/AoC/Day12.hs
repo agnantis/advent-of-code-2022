@@ -3,7 +3,7 @@ module AoC.Day12 where
 
 import Control.Arrow ((&&&))
 import Control.Monad (guard)
-import Data.Array.IArray (Array, array, bounds, (!), (//))
+import Data.Array.IArray (Array, assocs, array, bounds, (!), (//))
 import Data.Char (ord)
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -74,7 +74,7 @@ findBestPath input@Config{..} state@State{..} =
       visited' = S.insert curPos visited
       st' = state { visited = visited', frontier = frontier'' }
   in if noMoreMoves
-      then error "Unable to find a path!"
+      then maxBound -- error "Unable to find a path!"
       else if reachedGoal
         then v -- length visited
         else {- trace (show curPos <> " State: " <> show st' ) $ -} findBestPath input st'
@@ -109,7 +109,9 @@ fstStar :: Input -> Output
 fstStar input = findBestPath input (initState input)
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar input@Config{..} =
+  let candidates = fmap fst . filter (\(_,v) -> v == ord 'a') . assocs $ heightMap  :: [Coords]
+  in trace ("Candidates: " <> show (length candidates)) $ minimum . fmap (\s -> fstStar input { startPos = s }) $ candidates
 
 mainDay12 :: IO ()
 mainDay12 = do
