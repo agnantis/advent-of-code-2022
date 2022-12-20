@@ -23,6 +23,7 @@ library
       AoC.Day1
       AoC.Day10
       AoC.Day11
+      AoC.Day12
       AoC.Day2
       AoC.Day3
       AoC.Day4
