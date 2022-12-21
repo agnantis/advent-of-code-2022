@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Lib
-import AoC.Day12 as Day
+import AoC.Day13 as Day
 
 main :: IO ()
-main = Day.mainDay12
+main = Day.mainDay13
