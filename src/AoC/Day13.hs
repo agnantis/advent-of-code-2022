@@ -1,16 +1,19 @@
 module AoC.Day13 where
 
 import Control.Arrow ((&&&))
+import Data.List (foldl', intersperse, sort)
 import Data.Void (Void)
 import Text.Megaparsec (Parsec, choice, eof, optional, many, runParser, some, try, (<|>))
 import Text.Megaparsec.Char (eol, space, char, digitChar, string)
+
+import AoC.Utils (splitWhen)
 
 type Input = [(Item, Item)]
 type Output = Int
 type Parser = Parsec Void String
 
 data Item = No Int
-             | List [Item] deriving (Eq, Show)
+             | List [Item] deriving (Eq)
 
 -- example: [[4,4],4,4], [[4,4],4,4,4]
 example :: Item
@@ -48,6 +51,10 @@ listP = do
 
 -- 
 
+instance Show Item where
+  show (No i) = show i
+  show (List xs) = "[" <> concat (intersperse "," (fmap show xs)) <> "]"
+
 instance Ord Item where
   compare (No i) (No j) = compare i j
   compare (No i) lst = compare (List [No i]) lst
@@ -59,15 +66,25 @@ instance Ord Item where
     EQ -> compare xs ys
     other -> other
 
-parseLines :: String -> Input
-parseLines = undefined
+mergeInput :: Input -> [Item]
+mergeInput = foldl' (\xs (l1, l2) -> l1:l2:xs) []
+
+divider1, divider2 :: Item
+divider1 = List [List [No 2]]
+divider2 = List [List [No 6]]
 
 fstStar :: Input -> Output
-fstStar = sum . fmap fst . filter (\(idx, (xs1, xs2)) -> xs1 `compare` xs2 == LT) . zip [1..]
+fstStar = sum . fmap fst . filter (\(_, (xs1, xs2)) -> xs1 `compare` xs2 == LT) . zip [1..]
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar input =
+  let sortedList = sort . (<>) [divider1, divider2] . mergeInput $ input
+      (p1:p2:_) = splitWhen (\ls -> ls == divider1 || ls == divider2) sortedList
+      lp1 = length p1 + 1
+      lp2 = length p2 + 1
+  in lp1 * (lp1 + lp2)
 
+testFun = sort . mergeInput
 ---
 
 mainDay13 :: IO ()
@@ -77,6 +94,7 @@ mainDay13 = do
 
 -- playground
 
+testInput :: [String]
 testInput = [
   "[1,1,3,1,1]",
   "[1,1,5,1,1]",
